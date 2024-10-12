@@ -1,5 +1,8 @@
 <script>
 	import { onMount } from 'svelte';
+	import { env as envPubSearxngTheme } from '$env/dynamic/public';
+
+	const isSearxng = envPubSearxngTheme.PUBLIC_SEARXNG === 'true';
 
 	/**
 	 * @typedef {object} Props
@@ -7,7 +10,8 @@
 	 */
 
 	/** @type {Props} */
-	let { browser = false } = $props();
+	//let { browser = false } = $props();
+	let { browser = false, hydrate = false } = $props();
 
 	/** @type {'light' | 'dark' | 'system'} */
 	let selected = $state('system');
@@ -77,7 +81,10 @@
 		const system = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 		const theme = selected === 'system' ? system : selected;
 		if (theme === 'dark') document.documentElement.classList.add('dark');
-		else document.documentElement.classList.add('light');
+		/*
+	 TODO: Theme can be changed only at the start page.
+	The ! version was orignaly used.
+	*/
 	</script>
 </svelte:head>
 

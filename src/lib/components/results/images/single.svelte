@@ -1,5 +1,8 @@
 <script>
 	import { proxyImageLink } from '$lib/functions/api/proxyimage';
+	import { env as envPubSearxngImages } from '$env/dynamic/public';
+
+	const isSearxng = envPubSearxngImages.PUBLIC_SEARXNG === 'true';
 
 	/**
 	 * @typedef {object} Props
@@ -9,6 +12,8 @@
 
 	/** @type {Props} */
 	let { result, imagePreview = $bindable() } = $props();
+
+	result.rank = 1;
 
 	const loading = result.rank > 30 ? 'lazy' : 'eager';
 
@@ -22,28 +27,54 @@
 	}
 </script>
 
-<article class="size-full" id="image-{result.rank}">
-	<button
-		class:ring-4={selected}
-		class:ring-hearchco-primary={selected}
-		class:dark:ring-hearchco-secondary={selected}
-		class:hover:ring-hearchco-primary={selected}
-		class:hover:dark:ring-hearchco-secondary={selected}
-		class:hover:ring-neutral-300={!selected}
-		class:hover:dark:ring-neutral-100={!selected}
-		class="size-full rounded-lg shadow-sm dark:shadow-none overflow-hidden hover:ring-4 hover:scale-110 relative z-0 hover:z-10 transform delay-75 duration-300 ease-in-out"
-		onclick={openImage}
-	>
-		<img
-			id="img-{result.rank}"
-			class="size-full object-cover object-center"
-			src={proxyImageLink(
-				result.thumbnail_url,
-				result.thumbnail_url_hash,
-				result.thumbnail_url_hash_timestamp
-			)}
-			alt={result.title}
-			{loading}
-		/>
-	</button>
-</article>
+{#if !isSearxng}
+	<article class="size-full" id="image-{result.rank}">
+		<button
+			class:ring-4={selected}
+			class:ring-hearchco-primary={selected}
+			class:dark:ring-hearchco-secondary={selected}
+			class:hover:ring-hearchco-primary={selected}
+			class:hover:dark:ring-hearchco-secondary={selected}
+			class:hover:ring-neutral-300={!selected}
+			class:hover:dark:ring-neutral-100={!selected}
+			class="size-full rounded-lg shadow-sm dark:shadow-none overflow-hidden hover:ring-4 hover:scale-110 relative z-0 hover:z-10 transform delay-75 duration-300 ease-in-out"
+			onclick={openImage}
+		>
+			<img
+				id="img-{result.rank}"
+				class="size-full object-cover object-center"
+				src={proxyImageLink(
+					result.thumbnail_url,
+					result.thumbnail_url_hash,
+					result.thumbnail_url_hash_timestamp
+				)}
+				alt={result.title}
+				{loading}
+			/>
+		</button>
+	</article>
+{/if}
+
+{#if isSearxng}
+	<article class="size-full" id="image-{result.rank}">
+		<button
+			class:ring-4={selected}
+			class:ring-hearchco-primary={selected}
+			class:dark:ring-hearchco-secondary={selected}
+			class:hover:ring-hearchco-primary={selected}
+			class:hover:dark:ring-hearchco-secondary={selected}
+			class:hover:ring-neutral-300={!selected}
+			class:hover:dark:ring-neutral-100={!selected}
+			class="size-full rounded-lg shadow-sm dark:shadow-none overflow-hidden hover:ring-4 hover:scale-110 relative z-0 hover:z-10 transform delay-75 duration-300 ease-in-out"
+			onclick={openImage}
+		>
+			<img
+				id="img-{result.rank}"
+				class="size-full object-cover object-center"
+				src={result.img_src}
+				alt={result.title}
+				{loading}
+			/>
+		</button>
+	</article>
+{/if}

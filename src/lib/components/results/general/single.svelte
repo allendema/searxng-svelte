@@ -1,6 +1,9 @@
 <script>
 	import Logo from '$lib/assets/logo.svg';
 	import { proxyFaviconLink } from '$lib/functions/api/proxyimage';
+	import { env as envPubSearxngGeneral } from '$env/dynamic/public';
+
+	const isSearxng = envPubSearxngGeneral.PUBLIC_SEARXNG === 'true';
 
 	/**
 	 * @typedef {object} Props
@@ -9,6 +12,20 @@
 
 	/** @type {Props} */
 	let { result } = $props();
+
+	// searxng backend conversions
+	if (isSearxng) {
+		// does not exist
+		result.rank = 1;
+
+		// 'renaming'
+		result.description = result.content;
+
+		// ensurance
+		if (result.description.length === 0) {
+			result.description = 'no description';
+		}
+	}
 
 	const favicon =
 		result.favicon_hash && result.favicon_hash != ''
@@ -57,6 +74,7 @@
 			{result.title}
 		</h1>
 	</a>
+
 	{#if shortDesc.length < result.description.length}
 		<div class="flex place-content-end">
 			<button onclick={toggleDesc}>
@@ -82,12 +100,21 @@
 	>
 		{currentDesc}
 	</p>
-	<div
-		id="engines-{result.rank}"
-		class="pb-2 text-right text-xs text-neutral-800 dark:text-neutral-400"
-	>
-		{#each result.engine_ranks as er (er.search_engine)}
-			<span class="mx-0.5">{er.search_engine}</span>
-		{/each}
-	</div>
+
+	{#if !isSearxng}
+		<div
+			id="engines-{result.rank}"
+			class="pb-2 text-right text-xs text-neutral-800 dark:text-neutral-400"
+		>
+			{#each result.engine_ranks as er (er.search_engine)}
+				<span class="mx-0.5">{er.search_engine}</span>
+			{/each}
+		</div>
+	{/if}
+
+	{#if isSearxng}
+		<div class="pb-2 text-right text-xs text-neutral-800 dark:text-neutral-400">
+			<span class="mx-0.5">{result.engine}</span>
+		</div>
+	{/if}
 </article>

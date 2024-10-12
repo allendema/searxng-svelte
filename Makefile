@@ -1,30 +1,31 @@
 install:
-	pnpm install --frozen-lockfile
+	yarn install --frozen-lockfile
+
 	sed -i -E 's|npm:@sveltejs/kit@[^/"]+|@sveltejs/kit|g' ./node_modules/@hearchco/sveltekit-adapter-aws/handler/index.js
 
 update:
-	pnpm update
+	yarn update
 
 dev:
-	pnpm run dev
+	yarn run dev -- --host 0.0.0.0 --port 5173
 
 compile:
-	pnpm run build
+	yarn run build
 
 preview:
-	pnpm run preview
+	yarn run preview -- --host 0.0.0.0
 
 check:
-	pnpm run check
+	yarn run check
 
 test:
-	pnpm run test:unit
+	yarn run test:unit
 
 lint:
-	pnpm run lint
+	yarn run lint
 
 format:
-	pnpm run format
+	yarn run format
 
 adapter-aws:
 	cp svelte.config.aws.js svelte.config.js

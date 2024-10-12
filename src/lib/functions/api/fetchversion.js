@@ -5,7 +5,7 @@ import { createApiUrl } from '$lib/functions/api/createurl.js';
  * @param {typeof fetch} [fetcher]
  * @returns {Promise<string>}
  */
-export async function fetchVersion(fetcher = fetch) {
+export async function fetchVersionUpstream(fetcher = fetch) {
 	/** @type {URL} */
 	let apiUrl;
 	try {
@@ -32,6 +32,12 @@ export async function fetchVersion(fetcher = fetch) {
 
 	/** @type {string} */
 	const version = await response.text();
+
+	return version;
+}
+
+export async function fetchVersion(fetcher = fetch) {
+	const version = 'searxng';
 
 	return version;
 }

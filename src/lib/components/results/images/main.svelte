@@ -34,11 +34,7 @@
 			class="grid grid-flow-dense grid-cols-sm-fit sm:grid-cols-fit auto-rows-[28dvw] sm:auto-rows-[168px] gap-2"
 		>
 			{#each results as result (result.url)}
-				<div
-					class:row-span-2={(result.thumbnail.height * 0.8) / result.thumbnail.width > 1}
-					class:col-span-2={result.thumbnail.height / (result.thumbnail.width * 0.64) < 1}
-					class="flex-none"
-				>
+				<div class="flex-none">
 					<Single {result} bind:imagePreview />
 				</div>
 			{/each}

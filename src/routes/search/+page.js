@@ -1,5 +1,13 @@
+import { env as envPubSearxng } from '$env/dynamic/public';
 import { browser } from '$app/environment';
 import { error } from '@sveltejs/kit';
+
+const isSearxng = envPubSearxng.PUBLIC_SEARXNG === 'true';
+
+//export const csr = isSearxng ? true : false;
+export const csr = isSearxng ? false : undefined; // works with searxng
+
+//console.log("is csr: " + csr);
 
 import { getCategoryFromQuery, getQueryWithoutCategory } from '$lib/functions/query/category';
 import { concatSearchParams } from '$lib/functions/api/concatparams';
@@ -40,19 +48,57 @@ export async function load({ url, fetch }) {
 		throw error(400, "Only category specified in 'q' parameter");
 	}
 
-	// Concatenate search params.
-	const newSearchParams = concatSearchParams([
-		['q', queryWithoutCategory],
-		['category', category !== CategoryEnum.GENERAL ? category : ''],
-		['start', currentPage !== 1 ? currentPage.toString() : ''],
-		['pages', maxPages !== 1 ? maxPages.toString() : '']
-	]);
+	var newSearchParams = null;
+	// console.log("isSearxng: " + isSearxng);
+	// console.log(toCategoryType(category));
+
+	// newSearchParams if hearchco backend
+	if (!isSearxng) {
+		// Concatenate search params.
+		var newSearchParams = concatSearchParams([
+			['q', queryWithoutCategory],
+			['category', category !== CategoryEnum.GENERAL ? category : ''],
+			['start', currentPage !== 1 ? currentPage.toString() : ''],
+			['pages', maxPages !== 1 ? maxPages.toString() : '']
+		]);
+	}
+
+	// newSearchParams if isSearxng backend
+	if (isSearxng) {
+		// hearchco to searxng backend 'categories' conversions
+		const categoryParamsMap = {
+			[CategoryEnum.GENERAL]: () => [
+				['categories', 'general'],
+				['format', 'json']
+			],
+			[CategoryEnum.IMAGES]: () => [
+				['categories', 'images'],
+				['format', 'json']
+			],
+			[CategoryEnum.SCIENCE]: () => [
+				['categories', 'science'],
+				['format', 'json']
+			],
+			[CategoryEnum.THOROUGH]: () => [
+				['categories', 'science,music,news,social_media,general'],
+				['format', 'json']
+			]
+		};
+
+		// Concatenate searxng search params.
+		var newSearchParams = concatSearchParams([
+			['q', queryWithoutCategory],
+			['pageno', currentPage.toString()],
+			...categoryParamsMap[category]()
+		]);
+	}
+	// console.log(newSearchParams);
 
 	// Fetch results.
 	const respP = fetchResults(newSearchParams, fetch);
 
-	// If not an exchange query, return results.
-	if (!exchangery(queryWithoutCategory)) {
+	// If category in CategoryEnum, return results.
+	if (typeof toCategoryType(category) !== 'undefined') {
 		const resp = await respP;
 		return {
 			browser: browser,
@@ -66,31 +112,33 @@ export async function load({ url, fetch }) {
 		};
 	}
 
-	// Fetch exchange result.
-	const { from, to, amount } = extractExchangeQuery(queryWithoutCategory);
-	const currenciesP = fetchCurrencies();
+	// exchange results
+	if (exchangery(queryWithoutCategory)) {
+		// Fetch exchange result.
+		const { from, to, amount } = extractExchangeQuery(queryWithoutCategory);
+		const currenciesP = fetchCurrencies();
 
-	// Wait for all promises to resolve.
-	const resp = await respP;
-	const currencies = await currenciesP;
+		// Wait for all promises to resolve.
+		const resp = await respP;
+		const currencies = await currenciesP;
 
-	return {
-		browser: browser,
-		query: queryWithoutCategory,
-		currentPage: currentPage,
-		maxPages: maxPages,
-		category: category,
-		results: resp.results,
-		duration: resp.duration,
-		exchange: {
-			from: from,
-			to: to,
-			amount: amount,
-			currencies: new Map(Object.entries(currencies.currencies))
-		}
-	};
+		return {
+			browser: browser,
+			query: queryWithoutCategory,
+			currentPage: currentPage,
+			maxPages: maxPages,
+			category: category,
+			results: resp.results,
+			duration: resp.duration,
+			exchange: {
+				from: from,
+				to: to,
+				amount: amount,
+				currencies: new Map(Object.entries(currencies.currencies))
+			}
+		};
+	}
 }
-
 /**
  * Get category from URL or query.
  * @param {string} query - Query from URL.
@@ -101,7 +149,7 @@ export async function load({ url, fetch }) {
 function getCategory(query, params) {
 	const categoryFromQuery = getCategoryFromQuery(query);
 	const categoryParam = params.get('category') ?? '';
-	const category =
+	var category =
 		categoryFromQuery !== ''
 			? toCategoryType(categoryFromQuery)
 			: categoryParam !== ''
@@ -110,9 +158,12 @@ function getCategory(query, params) {
 
 	// Check if category is valid.
 	if (!category) {
-		// Bad Request.
-		throw error(400, "Invalid 'category' parameter in URL or query");
+		if (isSearxng) {
+			category = CategoryEnum.GENERAL;
+		} else {
+			// Bad Request.
+			throw error(400, "Invalid 'category' parameter in URL or query");
+		}
 	}
-
 	return category;
 }
